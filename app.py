@@ -135,13 +135,22 @@ if query:
                 
                 # Provenance
                 st.markdown("**Source:**")
-                col1, col2, col3 = st.columns(3)
+                col1, col2, col3, col4 = st.columns(4)
                 with col1:
                     st.metric("PDF", metadata['source'])
                 with col2:
                     st.metric("Page", metadata['page'])
                 with col3:
                     st.metric("Chunk", metadata.get('chunk', 0))
+                with col4:
+                    # Extract arXiv ID from filename and create link
+                    source_file = metadata['source']
+                    if source_file.endswith('.pdf'):
+                        arxiv_id = source_file.replace('.pdf', '')
+                        arxiv_url = f"https://arxiv.org/abs/{arxiv_id}"
+                        st.markdown(f"[📄 Read Full Paper]({arxiv_url})")
+                    else:
+                        st.markdown("—")
                 
                 # Extraction button
                 st.markdown("---")
