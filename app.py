@@ -22,7 +22,6 @@ collection = chroma_client.get_collection(
     embedding_function=openai_ef
 )
 
-
 def extract_structured_data(text_chunk, query):
     """Extract structured fields using GPT-4"""
     
@@ -31,16 +30,18 @@ def extract_structured_data(text_chunk, query):
 Query: {query}
 
 Document excerpt:
-{text_chunk[:2000]}  # Limit to save tokens
+{text_chunk[:2000]}
 
 Extract the following if present in the text:
 1. Research methodology/approach
 2. Materials or substances studied
 3. Key findings or outcomes
-4. Challenges or failure modes mentioned
+4. Challenges, problems, limitations, or failure modes mentioned (look for explicit statements AND implicit challenges being addressed)
 
 Return as JSON with these exact keys:
 {{"methodology": "...", "materials": "...", "findings": "...", "challenges": "..."}}
+
+For challenges: Include both explicitly stated problems AND problems that are implicitly being solved by the research (e.g., if text discusses "stabilizing" something, the challenge is instability; if it discusses "improving biocompatibility", the challenge is poor biocompatibility).
 
 If a field is not found, use "Not mentioned" as the value.
 """
@@ -63,7 +64,6 @@ If a field is not found, use "Not mentioned" as the value.
     except Exception as e:
         return {"error": str(e)}
 
-
 # Page config
 st.set_page_config(
     page_title="Scientific Knowledge Search",
@@ -85,13 +85,14 @@ with st.sidebar:
     st.header("📊 Corpus Stats")
     total_docs = collection.count()
     st.metric("Total Chunks", f"{total_docs:,}")
-    st.metric("Source PDFs", "~100")
+    st.metric("Source PDFs", "~30")
     
     st.markdown("---")
     st.markdown("**Try these queries:**")
     st.code("collagen crosslinking challenges")
     st.code("wet spinning failure modes")
     st.code("polymer degradation mechanisms")
+    st.code("biocompatibility testing methods")
 
 # Search interface
 query = st.text_input(
@@ -142,7 +143,7 @@ if query:
                 with col3:
                     st.metric("Chunk", metadata.get('chunk', 0))
                 
-                # ⭐ EXTRACTION BUTTON - INSIDE THE EXPANDER ⭐
+                # Extraction button
                 st.markdown("---")
                 if st.button(f"🔬 Extract Structured Data", key=f"extract_{idx}"):
                     with st.spinner("Extracting..."):
@@ -168,17 +169,10 @@ if query:
                         else:
                             st.error(f"Extraction failed: {structured['error']}")
 
-
-
-
-
-
-
-
 # Footer
 st.markdown("---")
 st.markdown("""
-**Built by:** Denis Daigle | Ridealong.co  
+**Built by:** Denis Daigle | Ridealong.co | KeepItCanadian.ai
 **Tech Stack:** Streamlit + ChromaDB + OpenAI Embeddings  
 **For:** Volta Effect R.26.01 Knowledge Discovery Engine POC
 """)
